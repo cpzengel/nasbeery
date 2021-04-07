@@ -21,7 +21,7 @@ done
 
 # Install necessary Packages and ZFS
 sudo apt update
-sudo apt install -y samba zfs-dkms cockpit dialog 
+sudo apt install -y samba zfs-dkms cockpit
 
 # Start ZFS Module before reboot
 sudo /sbin/modprobe zfs 
@@ -42,8 +42,24 @@ sudo sed -i 's/12/3/g' /etc/cron.monthly/zfs-auto-snapshot
 # change hostname
 sudo sed -i 's/ubuntu/nasbeery/g' /etc/hostname
 
-# create Mirror and force Deletion of existing Data
-sudo zpool create -f -o autoexpand=on -o ashift=12 tank mirror sda sdb  
+# ask for deletion of existing data and create Mirror 
+whiptail --title "Possible data loss!" \
+--backtitle "NASBEERY SETUP" \
+--yes-button "PRESERVE DATA" \
+--no-button  "FORMAT DISKS!" \
+--yesno "Would you like to preserve you existing ZFS data from a previous installation?" 10 75
+
+# Get exit status
+# 0 means user hit [yes] button.
+# 1 means user hit [no] button.
+# 255 means user hit [Esc] key.
+response=$?
+case $response in
+   0) echo "Your ZFS Data will be preserved";;
+   1) echo "Existing data on the drives will be deleted..."
+      sudo zpool create -f -o autoexpand=on -o ashift=12 tank mirror sda sdb;;
+   255) echo "[ESC] key pressed >> EXIT" &&  exit;;
+esac
 
 # create Share with Compression, Samba share has to be in smb.conf to work with Snapshots later
 sudo zfs create -o compression=lz4 tank/share
@@ -56,5 +72,17 @@ echo "PATH="/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"\n*/1 * * * * root ech
 # Add to smb.conf how ZFS Snapshots
 
 echo "[share]\ncomment = Main Share\npath = /tank/share\nread only = No\nvfs objects = shadow_copy2\nshadow: snapdir = .zfs/snapshot\nshadow: sort = desc\nshadow: format = -%Y-%m-%d-%H%M\nshadow: snapprefix = ^zfs-auto-snap_\(frequent\)\{0,1\}\(hourly\)\{0,1\}\(daily\)\{0,1\}\(monthly\)\{0,1\}\nshadow: delimiter = -20\n" | sudo tee -a "/etc/samba/smb.conf"
+
+
+# Change password for Samba and Terminal
+while [[ "$PASSWORD" != "$PASSWORD_REPEAT" || ${#PASSWORD} -lt 8 ]]; do
+  PASSWORD=$(whiptail --backtitle "NASBEERY SETUP" --title "Set password!" --passwordbox "${PASSWORD_invalid_message}Please set a password for Terminal, Samba and Backupwireless\n(At least 8 characters!):" 10 75 3>&1 1>&2 2>&3)
+  PASSWORD_REPEAT=$(whiptail --backtitle "NASBEERY SETUP" --title "Set password!" --passwordbox "Please repeat the Password:" 10 70 3>&1 1>&2 2>&3)
+  PASSWORD_invalid_message="ERROR: Password is too short, or not matching! \n\n"
+done
+
+echo "ubuntu:$PASSWORD" | sudo chpasswd
+(echo "$PASSWORD"; echo "$PASSWORD") | sudo smbpasswd -a ubuntu
+
 
 sudo reboot
