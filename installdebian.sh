@@ -16,7 +16,8 @@ git clone https://github.com/optimans/cockpit-zfs-manager.git
  sed -i 's/12/3/g' /etc/cron.monthly/zfs-auto-snapshot
 
 # change hostname
-echo nasbeery > /etc/hostname
+hostnamectl set-hostname nasbeery.bashclub.lan
+sed -i 's/localhost/nasbeery.bashclub.lan   nasbeery/g' /etc/hosts
 
 # ask for deletion of existing data and create Mirror 
 whiptail --title "Possible data loss!" \
@@ -59,3 +60,14 @@ done
 
 echo "root:$PASSWORD" |  chpasswd
 (echo "$PASSWORD"; echo "$PASSWORD") |  smbpasswd -a root
+
+### here we go with ispconfig later
+exit
+
+zfs create -o mountpoint=/var/www tank/ispwww
+zfs create -o mountpoint=/var/backup tank/ispbackup
+zfs create -o mountpoint=/var/lib/mysql tank/ispmysql
+wget -O - https://get.ispconfig.org | sh -s -- --help
+#Rar is not available, so we go with Midnight Commander:)
+sed -i 's/rar/mc/g' /tmp/ispconfig-ai/lib/os/class.ISPConfigDebianOS.inc.php
+wget -O - https://get.ispconfig.org | sh -s -- --lang=en --use-php=7.4,8.1 --no-mail --no-dns --no-firewall --no-roundcube --no-quota --unattended-upgrades --i-know-what-i-am-doing
