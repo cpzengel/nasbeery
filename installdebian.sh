@@ -70,4 +70,4 @@ zfs create -o mountpoint=/var/lib/mysql tank/ispmysql
 wget -O - https://get.ispconfig.org | sh -s -- --help
 #Rar is not available, so we go with Midnight Commander:)
 sed -i 's/rar/mc/g' /tmp/ispconfig-ai/lib/os/class.ISPConfigDebianOS.inc.php
-wget -O - https://get.ispconfig.org | sh -s -- --lang=en --use-php=7.4,8.1 --no-mail --no-dns --no-firewall --no-roundcube --no-quota --unattended-upgrades --i-know-what-i-am-doing
+php /tmp/ispconfig-ai/ispconfig.ai.php --lang=en --use-php=7.4,8.1 --no-mail --no-dns --no-firewall --no-roundcube --no-quota --unattended-upgrades --i-know-what-i-am-doing
