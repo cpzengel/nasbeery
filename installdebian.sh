@@ -40,7 +40,7 @@ esac
 # create Share with Compression, Samba share has to be in smb.conf to work with Snapshots later
  zfs create -o compression=lz4 tank/share
  chmod -R 770 /tank
- chown -R ubuntu:root /tank
+ chown -R root:root /tank
 
 # check Mirror to be online, otherwise Power Indicator like LED or Buzzer
 echo -e "PATH="/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"\n*/1 * * * * root echo 14 > /sys/class/gpio/export 2> /dev/null;echo out > /sys/class/gpio/gpio14/direction ; zpool import -fa -d /dev/ > /dev/null; zpool list| grep -q ONLINE; echo \$? > /sys/class/gpio/gpio14/value" |  tee  "/etc/cron.d/raidled"
